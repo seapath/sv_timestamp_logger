@@ -30,12 +30,12 @@ static const struct option long_options[] = {
 };
 
 static const char * const HELP_MSG_FMT =
-        "Usage: %s [-d|--device <device>] [s|--stream <name>] [-t|--hardware_timestamping] [-f| --filename] \n"
+        "Usage: %s <-d|--device <device>> [s|--stream <name>] [-t|--hardware_timestamping] [-f| --filename] \n"
         "\n"
         "Get the timestamp of sample values.\n"
         "\n"
         "Options:\n"
-        "\tdevice: the device to listen on. If not set, use all interfaces\n"
+        "\tdevice: the device to listen on.\n"
         "\tstream: the number of the stream on which to look for sample values. If not set, use all streams\n"
         "\tfilename: the file to write the timestamps. If not set, use stdout\n"
         "\thardware_timestamping: enable NIC hardware timestamping (PTP must be setup)\n"
@@ -59,6 +59,7 @@ static int parse_args(int argc, char *argv[])
         int opt;
         int long_index = 0;
         // default values
+        opts.device = NULL;
         opts.stream = NULL;
         opts.SV_filename = "/dev/stdout";
 
@@ -86,7 +87,13 @@ static int parse_args(int argc, char *argv[])
                         return 1;
                 }
         }
-        return 0;
+
+        if(opts.device != NULL) {
+                return 0;
+        } else {
+                fprintf(stderr, "No device provided\n");
+                return 1;
+        }
 }
 
 static void stop_capture_loop()
