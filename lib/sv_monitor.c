@@ -16,8 +16,7 @@
 #include "lib/sv_monitor.h"
 
 #define PCAP_READ_TIMEOUT 1000 // 1s
-#define IEC_61850_SV_PROTOCOL "ether proto 0x88ba"
-
+#define IEC_61850_SV_PROTOCOL "vlan and ether proto 0x88ba"
 
 static void print_pcap_timestamp_type_error(int err)
 {
