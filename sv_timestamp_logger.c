@@ -16,6 +16,10 @@
 #include <arpa/inet.h>
 #include <netinet/if_ether.h>
 
+#include <time.h>
+#define __USE_GNU
+#include <sys/time.h>
+
 #include "sv_timestamp_logger.h"
 #include "lib/sv_parser.h"
 #include "lib/sv_monitor.h"
@@ -103,12 +107,29 @@ static void stop_capture_loop()
         }
 }
 
-static void gather_records(const struct pcap_pkthdr * header,
+static int get_ts(struct timeval* tv) {
+    int ret = 0;
+    struct timespec ts;
+    if (clock_gettime(CLOCK_REALTIME, &ts) == -1) {
+        perror("clock_gettime");
+        ret = -1;
+    }
+    TIMESPEC_TO_TIMEVAL(tv, &ts);
+    return ret;
+}
+
+static void gather_records(const struct pcap_pkthdr *header,
                            const uint8_t *packet)
 {
         parse_SV_payload(packet + sizeof(struct ethhdr) + 4*sizeof(uint8_t), sv);
 
-        struct timeval timestamp = header->ts;
+        struct timeval timestamp;
+
+        if(opts.enable_hardware_ts) {
+                timestamp = header->ts;
+        } else {
+                get_ts(&timestamp);
+        }
 
         if(opts.stream == NULL){ // if no stream has been selected
                 fprintf(SV_timestamp_file, "%s:%d:%ld%06ld\n",
