@@ -132,18 +132,18 @@ static void gather_records(const struct pcap_pkthdr *header,
         }
 
         if(opts.stream == NULL){ // if no stream has been selected
-                fprintf(SV_timestamp_file, "%s:%d:%ld%06ld\n",
+                fprintf(SV_timestamp_file, "%s:%d:%ld\n",
                         sv->seqASDU[0].svID,
                         sv->seqASDU[0].smpCnt,
-                        timestamp.tv_sec,
-                        timestamp.tv_usec);
+                        (timestamp.tv_sec * 1000 * 1000)
+                        + (timestamp.tv_usec));
 
         } else if(!strcmp(sv->seqASDU[0].svID, opts.stream)){
-                fprintf(SV_timestamp_file, "%s:%d:%ld%06ld\n",
+                fprintf(SV_timestamp_file, "%s:%d:%ld\n",
                         sv->seqASDU[0].svID,
                         sv->seqASDU[0].smpCnt,
-                        timestamp.tv_sec,
-                        timestamp.tv_usec);
+                        (timestamp.tv_sec * 1000 * 1000)
+                        + (timestamp.tv_usec));
         }
 }
 
