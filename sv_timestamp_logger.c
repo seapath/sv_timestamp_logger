@@ -149,7 +149,6 @@ static void gather_records(const struct pcap_pkthdr *header,
 
 int main(int argc, char *argv[]) {
         int ret = 0;
-        setlinebuf(stdout);
 
         ret = parse_args(argc, argv);
         if(ret) return ret;
