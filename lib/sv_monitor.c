@@ -149,6 +149,7 @@ exit:
 void free_monitor(struct sv_monitor * monitor)
 {
         pcap_close(monitor->handle);
+        free(monitor);
 }
 
 /**
