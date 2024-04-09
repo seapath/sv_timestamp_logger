@@ -13,7 +13,7 @@
 
 #include <netinet/if_ether.h>
 
-#include "lib/sv_monitor.h"
+#include "sv_monitor.h"
 
 #define PCAP_READ_TIMEOUT 1000 // 1s
 #define IEC_61850_SV_PROTOCOL "vlan and ether proto 0x88ba"
