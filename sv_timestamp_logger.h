@@ -15,4 +15,6 @@ struct sv_timestamp_logger_opts {
     int enable_hardware_ts;
     char *stream;
     char * SV_filename;
+    int first_SV_cnt;
+    int max_SV_cnt;
 };

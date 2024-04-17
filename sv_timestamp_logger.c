@@ -31,11 +31,13 @@ static const struct option long_options[] = {
         { "stream", required_argument, 0, 's'},
         { "filename", required_argument, 0, 'f'},
         { "hardware_timestamping", no_argument, 0, 't' },
+        { "first_SV_cnt", required_argument, 0, 'c'},
+        { "max_SV_cnt", required_argument, 0, 'm' },
         { 0, 0, 0, 0 }
 };
 
 static const char * const HELP_MSG_FMT =
-        "Usage: %s <-d|--device <device>> [s|--stream <name>] [-t|--hardware_timestamping] [-f| --filename] \n"
+        "Usage: %s <-d|--device <device>> [s|--stream <name>] [-t|--hardware_timestamping] [-f| --filename] <--first_SV_cnt <cnt>> <--max_SV_cnt <cnt>>\n"
         "\n"
         "Get the timestamp of sample values.\n"
         "\n"
@@ -44,6 +46,8 @@ static const char * const HELP_MSG_FMT =
         "\tstream: the number of the stream on which to look for sample values. If not set, use all streams\n"
         "\tfilename: the file to write the timestamps. If not set, use stdout\n"
         "\thardware_timestamping: enable NIC hardware timestamping (PTP must be setup)\n"
+        "\tfirst_SV_cnt: counter of the first SV to be sent. If not set, SV drop will not be computed.\n"
+        "\tmax_SV_cnt: max counter of SV in the chosen IEC 61850 configuration. If not set, SV drop will not be computed.\n"
 ;
 
 /*  Global Variables */
@@ -52,6 +56,8 @@ static struct sv_monitor * volatile monitor; // volatile because may be used
                                              // from a signal handler
 static FILE * SV_timestamp_file;
 static struct SV_payload *sv;
+
+static int compute_SV_drop;
 
 
 static void print_help(const char* program_name)
@@ -67,8 +73,10 @@ static int parse_args(int argc, char *argv[])
         opts.device = NULL;
         opts.stream = NULL;
         opts.SV_filename = "/dev/stdout";
+        opts.first_SV_cnt = 0;
+        opts.max_SV_cnt = 0;
 
-        while ((opt = getopt_long(argc, argv, "htd:s:n:f:", long_options,
+        while ((opt = getopt_long(argc, argv, "htd:s:n:f:c:m:", long_options,
                                   &long_index)) != -1) {
                 switch (opt) {
                 case 'h':
@@ -86,11 +94,21 @@ static int parse_args(int argc, char *argv[])
                 case 'f':
                         opts.SV_filename = optarg;
                         break;
+                case 'c':
+                        opts.first_SV_cnt = atoi(optarg);
+                        break;
+                case 'm':
+                        opts.max_SV_cnt = atoi(optarg);
+                        break;
                 case '?':
                         fprintf(stderr, "Invalid option: -%c\n", optopt);
                         print_help(argv[0]);
                         return 1;
                 }
+        }
+
+        if (opts.first_SV_cnt != 0 || opts.max_SV_cnt != 0 ) {
+            compute_SV_drop = 1;
         }
 
         if(opts.device != NULL) {
