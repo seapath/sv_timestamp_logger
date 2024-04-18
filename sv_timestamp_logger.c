@@ -19,6 +19,7 @@
 #include <time.h>
 #define __USE_GNU
 #include <sys/time.h>
+#include <sched.h>
 
 #include "sv_timestamp_logger.h"
 #include "lib/sv_parser.h"
@@ -148,7 +149,15 @@ static void gather_records(const struct pcap_pkthdr *header,
 }
 
 int main(int argc, char *argv[]) {
-        int ret = 0;
+
+        struct sched_param sp = { .sched_priority = 1};
+        int ret;
+
+        ret = sched_setscheduler(0, SCHED_FIFO, &sp);
+        if (ret == -1) {
+                perror("sched_setscheduler");
+                return 1;
+        }
 
         ret = parse_args(argc, argv);
         if(ret) return ret;
