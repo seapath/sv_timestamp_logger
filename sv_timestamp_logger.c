@@ -59,6 +59,7 @@ static struct SV_payload *sv;
 
 static int compute_SV_drop;
 static int current_SV_cnt;
+static int total_SV_drop;
 
 static void print_help(const char* program_name)
 {
@@ -122,6 +123,7 @@ static int parse_args(int argc, char *argv[])
 
 static void stop_capture_loop()
 {
+        if (compute_SV_drop) printf("SV drop: %d\n", total_SV_drop);
         if(monitor) {
                 stop_monitor(monitor);
         }
@@ -145,7 +147,7 @@ static void gather_records(const struct pcap_pkthdr *header,
 
         if (compute_SV_drop) {
             int gap = (sv->seqASDU[0].smpCnt - current_SV_cnt + opts.max_SV_cnt) % opts.max_SV_cnt;
-            if (gap > 1) printf("Missed %d SV\n", gap-1);
+            if (gap > 1) total_SV_drop += gap - 1;
             current_SV_cnt = sv->seqASDU[0].smpCnt;
         }
 
