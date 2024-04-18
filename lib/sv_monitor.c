@@ -8,6 +8,8 @@
  * \license SPDX-License-Identifier: Apache-2.0
  */
 
+#include <pcap/pcap.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -41,8 +43,7 @@ static int configure_pcap(pcap_t *handle,
         }
 
         /* Default snap len */
-        if (pcap_set_snaplen(handle, BUFSIZ))
-        {
+        if (pcap_set_snaplen(handle, BUFSIZ)) {
                 pcap_perror(handle, "Couldn't set snaplen to BUFSIZ");
                 return -1;
         }
@@ -97,6 +98,13 @@ struct sv_monitor* init_monitor(char * device, int enable_hardware_ts)
         if (monitor->handle == NULL) {
                 fprintf(stderr, "Failed to create pcap handle: %s", errbuf);
                 goto cleanup_monitor;
+        }
+
+        // set packets to be packets delivered as soon as they arrive,
+        // with no buffering
+        if (pcap_set_immediate_mode(monitor->handle, 1) != 0) {
+                fprintf(stderr, "Failed to set immediate mode");
+                goto cleanup_handle;
         }
 
         if (configure_pcap(monitor->handle, enable_hardware_ts)) {
