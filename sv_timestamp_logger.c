@@ -58,7 +58,7 @@ static FILE * SV_timestamp_file;
 static struct SV_payload *sv;
 
 static int compute_SV_drop;
-
+static int current_SV_cnt;
 
 static void print_help(const char* program_name)
 {
@@ -108,6 +108,7 @@ static int parse_args(int argc, char *argv[])
         }
 
         if (opts.first_SV_cnt != 0 || opts.max_SV_cnt != 0 ) {
+            current_SV_cnt = opts.first_SV_cnt - 1;
             compute_SV_drop = 1;
         }
 
@@ -141,6 +142,12 @@ static void gather_records(const struct pcap_pkthdr *header,
                            const uint8_t *packet)
 {
         parse_SV_payload(packet + sizeof(struct ethhdr) + 4*sizeof(uint8_t), sv);
+
+        if (compute_SV_drop) {
+            int gap = (sv->seqASDU[0].smpCnt - current_SV_cnt + opts.max_SV_cnt) % opts.max_SV_cnt;
+            if (gap > 1) printf("Missed %d SV\n", gap-1);
+            current_SV_cnt = sv->seqASDU[0].smpCnt;
+        }
 
         struct timeval timestamp;
 
