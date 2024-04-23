@@ -33,11 +33,12 @@ static const struct option long_options[] = {
         { "hardware_timestamping", no_argument, 0, 't' },
         { "first_SV_cnt", required_argument, 0, 'c'},
         { "max_SV_cnt", required_argument, 0, 'm' },
+        { "log_only_SV_cnt_0", no_argument, 0, 'l'},
         { 0, 0, 0, 0 }
 };
 
 static const char * const HELP_MSG_FMT =
-        "Usage: %s <-d|--device <device>> [s|--stream <name>] [-t|--hardware_timestamping] [-f| --filename] <--first_SV_cnt <cnt>> <--max_SV_cnt <cnt>>\n"
+        "Usage: %s <-d|--device <device>> [s|--stream <name>] [-t|--hardware_timestamping] [-f| --filename] <--first_SV_cnt <cnt>> <--max_SV_cnt <cnt>> [-l --first_SV_log]\n"
         "\n"
         "Get the timestamp of sample values.\n"
         "\n"
@@ -48,6 +49,7 @@ static const char * const HELP_MSG_FMT =
         "\thardware_timestamping: enable NIC hardware timestamping (PTP must be setup)\n"
         "\tfirst_SV_cnt: counter of the first SV to be sent. If not set, SV drop will not be computed.\n"
         "\tmax_SV_cnt: max counter of SV in the chosen IEC 61850 configuration. If not set, SV drop will not be computed.\n"
+        "\tlog_only_SV_cnt_0: if set, log only the SV number 0.\n"
 ;
 
 /*  Global Variables */
@@ -76,8 +78,9 @@ static int parse_args(int argc, char *argv[])
         opts.SV_filename = "/dev/stdout";
         opts.first_SV_cnt = 0;
         opts.max_SV_cnt = 0;
+        opts.log_only_SV_cnt_0 = 0;
 
-        while ((opt = getopt_long(argc, argv, "htd:s:n:f:c:m:", long_options,
+        while ((opt = getopt_long(argc, argv, "htld:s:n:f:c:m:", long_options,
                                   &long_index)) != -1) {
                 switch (opt) {
                 case 'h':
@@ -100,6 +103,9 @@ static int parse_args(int argc, char *argv[])
                         break;
                 case 'm':
                         opts.max_SV_cnt = atoi(optarg);
+                        break;
+                case 'l':
+                        opts.log_only_SV_cnt_0 = 1;
                         break;
                 case '?':
                         fprintf(stderr, "Invalid option: -%c\n", optopt);
@@ -159,19 +165,16 @@ static void gather_records(const struct pcap_pkthdr *header,
                 get_ts(&timestamp);
         }
 
-        if(opts.stream == NULL){ // if no stream has been selected
-                fprintf(SV_timestamp_file, "%s:%d:%ld\n",
+        if ((opts.log_only_SV_cnt_0 && sv->seqASDU[0].smpCnt == 0)
+            || (!opts.log_only_SV_cnt_0)) {
+                if (opts.stream == NULL
+                    || (opts.stream != NULL
+                        && !strcmp(sv->seqASDU[0].svID, opts.stream))) {
+                        fprintf(SV_timestamp_file, "%s:%d:%ld\n",
                         sv->seqASDU[0].svID,
                         sv->seqASDU[0].smpCnt,
-                        (timestamp.tv_sec * 1000 * 1000)
-                        + (timestamp.tv_usec));
-
-        } else if(!strcmp(sv->seqASDU[0].svID, opts.stream)){
-                fprintf(SV_timestamp_file, "%s:%d:%ld\n",
-                        sv->seqASDU[0].svID,
-                        sv->seqASDU[0].smpCnt,
-                        (timestamp.tv_sec * 1000 * 1000)
-                        + (timestamp.tv_usec));
+                        (timestamp.tv_sec * 1000 * 1000) + (timestamp.tv_usec));
+                }
         }
 }
 
