@@ -38,7 +38,7 @@ static const struct option long_options[] = {
 };
 
 static const char * const HELP_MSG_FMT =
-        "Usage: %s <-d|--device <device>> [s|--stream <name>] [-t|--hardware_timestamping] [-f| --filename] <--first_SV_cnt <cnt>> <--max_SV_cnt <cnt>> [-l --first_SV_log]\n"
+        "Usage: %s <-d|--device <device>> [s|--stream <name>] [-t|--hardware_timestamping] [-f| --filename] [--first_SV_cnt <cnt>] [--max_SV_cnt <cnt>] [-l --first_SV_log]\n"
         "\n"
         "Get the timestamp of sample values.\n"
         "\n"
