@@ -1,0 +1,43 @@
+== Description
+The SV Timestamp Logger tool lets you record the timestamps of sample values received on a network interface.
+
+In accordance with the IEC 61850 standard, SV enable the transmission of current and voltage values in the form of different digital streams. With this tool, it is possible to listen to one or all streams.
+
+If the NIC enables hardware PTP, hardware timestamping can also be activated.
+
+If required, the SV drop can be calculated, i.e. the number of SVs that could not be logged.
+
+Note that the timestamp record file is configurable and that it is also possible to record only the timestamp of the first SV.
+
+== How to install
+=== Get SV parser
+In order to use the timestamp logger, you need to get the SV parser from : https://github.com/seapath/sv_parser
+
+=== Build Docker container
+Just run:
+```bash
+docker build . --tag sv_timestamp_logger
+```
+If you want to create an archive:
+```bash
+docker image save -o sv_timestamp_logger.tar sv_timestamp_logger
+```
+== About this documentation
+
+This documentation uses the AsciiDoc documentation generator. It is a convenient
+format that allows using plain-text formatted writing that can later be
+converted to various output formats such as HTML and PDF.
+
+In order to generate an HTML version of this documentation, use the following
+command (the asciidoc package will need to be installed in your Linux
+distribution):
+
+  $ asciidoc README.adoc
+
+This will result in a README.html file being generated in the current directory.
+
+If you prefer a PDF version of the documentation instead, use the following
+command (the dblatex package will need to be installed on your Linux
+distribution):
+
+  $ asciidoctor-pdf README.adoc
