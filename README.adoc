@@ -11,7 +11,7 @@ Note that the timestamp record file is configurable and that it is also possible
 
 == How to install
 === Get SV parser
-In order to use the timestamp logger, you need to get the SV parser from : https://github.com/seapath/sv_parser
+In order to use the timestamp logger, you need to get the SV parser from : https://github.com/seapath/sv_parser and put it in the lib directory.
 
 === Build Docker container
 Just run:
