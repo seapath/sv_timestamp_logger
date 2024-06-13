@@ -6,6 +6,7 @@
  * \license SPDX-License-Identifier: Apache-2.0
  */
 
+#include <linux/if_ether.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
@@ -146,10 +147,29 @@ static int get_ts(struct timeval* tv) {
     return ret;
 }
 
+static int is_vlan(const uint8_t *packet)
+{
+        const struct ethhdr *eth_header = (const struct ethhdr *)packet;
+        if (ntohs(eth_header->h_proto) == 0x8100) { // check if vlan Tagging EtherType
+                return 1;
+        } else {
+                return 0;
+        }
+}
+
 static void gather_records(const struct pcap_pkthdr *header,
                            const uint8_t *packet)
 {
-        parse_SV_payload(packet + sizeof(struct ethhdr) + 4*sizeof(uint8_t), sv);
+        if(is_vlan(packet)) {
+                parse_SV_payload(packet
+                        + sizeof(struct ethhdr) // skip Ethernet header
+                        + 4*sizeof(uint8_t), // skip vlan PCP/DEI
+                        sv);
+        } else {
+                parse_SV_payload(packet
+                        + sizeof(struct ethhdr),
+                        sv);
+        }
 
         if (compute_SV_drop) {
             int gap = (sv->seqASDU[0].smpCnt - current_SV_cnt + opts.max_SV_cnt) % opts.max_SV_cnt;
