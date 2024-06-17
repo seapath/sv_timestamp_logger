@@ -63,6 +63,7 @@ static struct SV_payload *sv;
 static int compute_SV_drop;
 static int current_SV_cnt;
 static int total_SV_drop;
+static int iteration_nb;
 
 static void print_help(const char* program_name)
 {
@@ -115,8 +116,10 @@ static int parse_args(int argc, char *argv[])
                 }
         }
 
+        iteration_nb = 0;
+        current_SV_cnt = opts.first_SV_cnt - 1;
+
         if (opts.first_SV_cnt != 0 || opts.max_SV_cnt != 0 ) {
-            current_SV_cnt = opts.first_SV_cnt - 1;
             compute_SV_drop = 1;
         }
 
@@ -174,8 +177,10 @@ static void gather_records(const struct pcap_pkthdr *header,
         if (compute_SV_drop) {
             int gap = (sv->seqASDU[0].smpCnt - current_SV_cnt + opts.max_SV_cnt) % opts.max_SV_cnt;
             if (gap > 1) total_SV_drop += gap - 1;
-            current_SV_cnt = sv->seqASDU[0].smpCnt;
         }
+
+        if (sv->seqASDU[0].smpCnt < current_SV_cnt) iteration_nb++;
+        current_SV_cnt = sv->seqASDU[0].smpCnt;
 
         struct timeval timestamp;
 
@@ -190,7 +195,8 @@ static void gather_records(const struct pcap_pkthdr *header,
                 if (opts.stream == NULL
                     || (opts.stream != NULL
                         && !strcmp(sv->seqASDU[0].svID, opts.stream))) {
-                        fprintf(SV_timestamp_file, "%s:%d:%ld\n",
+                        fprintf(SV_timestamp_file, "%d:%s:%d:%ld\n",
+                        iteration_nb,
                         sv->seqASDU[0].svID,
                         sv->seqASDU[0].smpCnt,
                         (timestamp.tv_sec * 1000 * 1000) + (timestamp.tv_usec));
