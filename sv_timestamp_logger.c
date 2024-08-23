@@ -179,8 +179,12 @@ static void gather_records(const struct pcap_pkthdr *header,
             if (gap > 1) total_SV_drop += gap - 1;
         }
 
-        if (sv->seqASDU[0].smpCnt < current_SV_cnt) iteration_nb++;
-        current_SV_cnt = sv->seqASDU[0].smpCnt;
+        if (opts.stream == NULL
+            || (opts.stream != NULL
+                && !strcmp(sv->seqASDU[0].svID, opts.stream))) {
+                    if (sv->seqASDU[0].smpCnt < current_SV_cnt) iteration_nb++;
+                    current_SV_cnt = sv->seqASDU[0].smpCnt;
+        }
 
         struct timeval timestamp;
 
