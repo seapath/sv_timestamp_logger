@@ -45,7 +45,7 @@ static const char * const HELP_MSG_FMT =
         "\n"
         "Options:\n"
         "\tdevice: the device to listen on.\n"
-        "\tstream: the number of the stream on which to look for sample values. If not set, use all streams\n"
+        "\tstream: the name of the stream on which to look for sample values. If not set, use all streams\n"
         "\tfilename: the file to write the timestamps. If not set, use stdout\n"
         "\thardware_timestamping: enable NIC hardware timestamping (PTP must be setup)\n"
         "\tfirst_SV_cnt: counter of the first SV to be sent. If not set, SV drop will not be computed.\n"
