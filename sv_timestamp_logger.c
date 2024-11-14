@@ -23,7 +23,7 @@
 #include <sched.h>
 
 #include "sv_timestamp_logger.h"
-#include "lib/sv_parser.h"
+#include "lib/sv_parser/sv_parser.h"
 #include "lib/sv_monitor.h"
 
 static const struct option long_options[] = {

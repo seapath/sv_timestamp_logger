@@ -29,8 +29,8 @@ add_executable(sv_timestamp_logger
     lib/sv_monitor.c
     sv_timestamp_logger.h
     sv_timestamp_logger.c
-    lib/sv_parser.c
-    lib/sv_parser.h
+    lib/sv_parser/sv_parser.c
+    lib/sv_parser/sv_parser.h
 )
 target_link_libraries(sv_timestamp_logger pcap m)
 
