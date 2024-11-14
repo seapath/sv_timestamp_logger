@@ -10,8 +10,11 @@ If required, the SV drop can be calculated, i.e. the number of SVs that could no
 Note that the timestamp record file is configurable and that it is also possible to record only the timestamp of the first SV.
 
 == How to install
+
 === Get SV parser
-In order to use the timestamp logger, you need to get the SV parser from : https://github.com/seapath/sv_parser and put it in the lib directory.
+
+sv_timestamp_logger uses [sv_parser](https://github.com/seapath/sv_parser) as a git submodule. The sv_timestamp_logger repository must be cloned with `--recurse-submodules` option.
+If you already clone the repository without this submodule, you can launch `git submodule update --init`.
 
 === Build Docker container
 Just run:

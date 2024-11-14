@@ -1,0 +1,3 @@
+[submodule "lib/sv_parser"]
+	path = lib/sv_parser
+	url = git@github.com:seapath/sv_parser.git
