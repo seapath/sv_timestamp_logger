@@ -1,6 +1,6 @@
-FROM ubuntu:22.04 as builder
+FROM ubuntu:22.04 AS builder
 
-ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
     bison \
     ca-certificates \
