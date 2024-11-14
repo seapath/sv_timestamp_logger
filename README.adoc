@@ -25,6 +25,24 @@ If you want to create an archive:
 ```bash
 docker image save -o sv_timestamp_logger.tar sv_timestamp_logger
 ```
+== Usage
+
+Launch the docker container with the following command, to get the help message of sv_timestamp_logger.
+```bash
+docker run sv_timestamp_logger --help
+```
+
+For example, the following command launch sv_timestamp_logger to capture all SV streams on interface enp3s0 and log them to /tmp/sv_log.
+```bash
+docker run --cap-add=sys_nice -v /tmp:/tmp --network=host sv_timestamp_logger -d enp3s0 -f /tmp/sv_log
+```
+
+Note: `--cap-add=sys_nice` and `--network=host` option are required respectively to enable RT priority and to access the host network interfaces.
+
+=== Usage on SEAPATH
+
+For more information on how to use this tool to test a SEAPATH infrastructure, refer to ["Simulating IEC61850 traffic for Seapath"](https://lf-energy.atlassian.net/wiki/x/RY3lAQ) on the SEAPATH wiki.
+
 == About this documentation
 
 This documentation uses the AsciiDoc documentation generator. It is a convenient
