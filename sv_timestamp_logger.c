@@ -18,13 +18,17 @@
 #include <netinet/if_ether.h>
 
 #include <time.h>
-#define __USE_GNU
-#include <sys/time.h>
 #include <sched.h>
 
 #include "sv_timestamp_logger.h"
 #include "lib/sv_parser/sv_parser.h"
 #include "lib/sv_monitor.h"
+
+// Manual define is needed for the arm version of the container
+# define TIMESPEC_TO_TIMEVAL(tv, ts) {                                   \
+        (tv)->tv_sec = (ts)->tv_sec;                                    \
+        (tv)->tv_usec = (ts)->tv_nsec / 1000;                           \
+}
 
 static const struct option long_options[] = {
         { "help", no_argument, 0, 'h' },

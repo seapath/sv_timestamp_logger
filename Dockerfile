@@ -1,4 +1,4 @@
-FROM ubuntu:22.04 AS builder
+FROM ubuntu:24.04 AS builder
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -40,7 +40,7 @@ RUN ls /build && \
   cmake -G Ninja .. && \
   ninja sv_timestamp_logger
 
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 COPY --from=builder /build/build/sv_timestamp_logger /usr/bin/sv_timestamp_logger
 

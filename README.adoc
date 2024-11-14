@@ -25,6 +25,16 @@ If you want to create an archive:
 ```bash
 docker image save -o sv_timestamp_logger.tar sv_timestamp_logger
 ```
+
+=== Cross compilation
+
+This container was tested on both x86 and arm64 machines. Cross-compilation is available throug Docker build command.
+
+For example, to build the container for arm64 on a x86 machine, use the command
+```bash
+docker build --platform linux/arm64 . --tag sv_timestamp_logger_arm64
+```
+
 == Usage
 
 Launch the docker container with the following command, to get the help message of sv_timestamp_logger.
