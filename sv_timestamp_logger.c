@@ -213,14 +213,14 @@ int main(int argc, char *argv[]) {
         struct sched_param sp = { .sched_priority = 1};
         int ret;
 
+        ret = parse_args(argc, argv);
+        if(ret) return ret;
+
         ret = sched_setscheduler(0, SCHED_FIFO, &sp);
         if (ret == -1) {
                 perror("sched_setscheduler");
                 return 1;
         }
-
-        ret = parse_args(argc, argv);
-        if(ret) return ret;
 
 
         monitor = init_monitor(opts.device, opts.enable_hardware_ts);
