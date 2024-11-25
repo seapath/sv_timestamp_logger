@@ -35,6 +35,40 @@ For example, to build the container for arm64 on a x86 machine, use the command
 docker build --platform linux/arm64 . --tag sv_timestamp_logger_arm64
 ```
 
+=== Static build
+
+A static version of sv_timestamp_logger is available. It requires the following packages :
+- clang
+- cmake
+- libpcap
+- make
+- ninja
+
+You can build the static version with the commands:
+```bash
+cmake -G Ninja -DBUILD_STATIC=ON .
+ninja sv_timestamp_logger
+```
+
+=== Static build with docker
+
+To avoid having to install the dependency, the dockerfile can be used to compile the static version of sv_timestamp_logger:
+```bash
+docker build -t sv_timestamp_logger_static --build-arg CMAKE_ADDITIONNAL_ARGS="-DBUILD_STATIC=ON" .
+```
+
+Once the build is done, you must launch the container to retrieve the static binary and copy it on your machine.
+```bash
+docker run --rm -v $(pwd):$(pwd) --entrypoint "" sv_timestamp_logger_static cp /usr/bin/sv_timestamp_logger $(pwd)/sv_timestamp_logger_static
+```
+
+The binary will be owned by root. You can change the owner to your user with the following command:
+```bash
+chown $USER:$USER sv_timestamp_logger_static
+```
+
+Note: If you are cross compiling from one platform to another, you will need to add the argument `--platform` to the docker run command. This requires the qemu-static package of your distribution to be installed.
+
 == Usage
 
 Launch the docker container with the following command, to get the help message of sv_timestamp_logger.
