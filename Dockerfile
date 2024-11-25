@@ -1,5 +1,7 @@
 FROM ubuntu:24.04 AS builder
 
+ARG CMAKE_ADDITIONNAL_ARGS
+
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
     bison \
@@ -37,7 +39,7 @@ COPY sv_timestamp_logger.* /build/
 
 RUN ls /build && \
   mkdir build && cd build && \
-  cmake -G Ninja .. && \
+  cmake -G Ninja $CMAKE_ADDITIONNAL_ARGS .. && \
   ninja sv_timestamp_logger
 
 FROM ubuntu:24.04
