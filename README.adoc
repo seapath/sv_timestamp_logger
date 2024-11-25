@@ -13,7 +13,7 @@ Note that the timestamp record file is configurable and that it is also possible
 
 === Get SV parser
 
-sv_timestamp_logger uses [sv_parser](https://github.com/seapath/sv_parser) as a git submodule. The sv_timestamp_logger repository must be cloned with `--recurse-submodules` option.
+sv_timestamp_logger uses https://github.com/seapath/sv_parser[sv_parser] as a git submodule. The sv_timestamp_logger repository must be cloned with `--recurse-submodules` option.
 If you already clone the repository without this submodule, you can launch `git submodule update --init`.
 
 === Build Docker container
@@ -51,7 +51,7 @@ Note: `--cap-add=sys_nice` and `--network=host` option are required respectively
 
 === Usage on SEAPATH
 
-For more information on how to use this tool to test a SEAPATH infrastructure, refer to ["Simulating IEC61850 traffic for Seapath"](https://lf-energy.atlassian.net/wiki/x/RY3lAQ) on the SEAPATH wiki.
+For more information on how to use this tool to test a SEAPATH infrastructure, refer to https://lf-energy.atlassian.net/wiki/x/RY3lAQ[Simulating IEC61850 traffic for Seapath" on the SEAPATH wiki]
 
 === Results
 
