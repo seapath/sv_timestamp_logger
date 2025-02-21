@@ -123,3 +123,19 @@ command (the dblatex package will need to be installed on your Linux
 distribution):
 
   $ asciidoctor-pdf README.adoc
+
+== Release notes
+
+Version v1.0:
+
+- Initial release of SV Timestamp Logger.
+- Features:
+  * Record timestamps of IEC 61850 Sample Values (SV) received on a network interface.
+  * Ability to listen to one or all SV streams.
+  * Hardware timestamping support if NIC enables hardware PTP.
+  * Calculate SV drop (number of SVs that could not be logged).
+  * Timestamps results logged in a result file.
+  * Results include SV stream ID, SV counter, and timestamp in UNIX time format.
+  * Option to record only the timestamp of the first SV.
+  * Docker container support for easy deployment.
+  * Cross-compilation support for x86 and arm64 machines.
