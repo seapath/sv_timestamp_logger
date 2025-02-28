@@ -240,7 +240,7 @@ int main(int argc, char *argv[]) {
         SV_timestamp_file = fopen(opts.SV_filename, "w");
         if(!SV_timestamp_file) {
                 ret = 2;
-                goto cleanup_SV_file;
+                goto cleanup_monitor;
         }
 
         signal(SIGSTOP, stop_capture_loop);
@@ -250,8 +250,7 @@ int main(int argc, char *argv[]) {
 
         ret = run_monitor(monitor);
 
-cleanup_SV_file:
-        if (opts.SV_filename) fclose(SV_timestamp_file);
+        fclose(SV_timestamp_file);
 
 cleanup_monitor:
         free_monitor(monitor);
