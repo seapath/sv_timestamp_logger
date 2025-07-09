@@ -39,11 +39,12 @@ static const struct option long_options[] = {
         { "first_SV_cnt", required_argument, 0, 'c'},
         { "max_SV_cnt", required_argument, 0, 'm' },
         { "log_only_SV_cnt_0", no_argument, 0, 'l'},
+        { "debug", no_argument, 0, 'g' },
         { 0, 0, 0, 0 }
 };
 
 static const char * const HELP_MSG_FMT =
-        "Usage: %s <-d|--device <device>> [s|--stream <name>] [-t|--hardware_timestamping] [-f| --filename] [--first_SV_cnt <cnt>] [--max_SV_cnt <cnt>] [-l --log_only_SV_cnt_0]\n"
+        "Usage: %s <-d|--device <device>> [s|--stream <name>] [-t|--hardware_timestamping] [-f| --filename] [--first_SV_cnt <cnt>] [--max_SV_cnt <cnt>] [-l --log_only_SV_cnt_0] [-g --debug]\n"
         "\n"
         "Get the timestamp of sample values.\n"
         "\n"
@@ -55,6 +56,7 @@ static const char * const HELP_MSG_FMT =
         "\tfirst_SV_cnt: counter of the first SV to be sent. If not set, SV drop will not be computed.\n"
         "\tmax_SV_cnt: max counter of SV in the chosen IEC 61850 configuration. If not set, SV drop will not be computed.\n"
         "\tlog_only_SV_cnt_0: if set, log only the SV number 0.\n"
+        "\tdebug: enable debug output.\n"
 ;
 
 /*  Global Variables */
@@ -68,6 +70,11 @@ static int compute_SV_drop;
 static int current_SV_cnt;
 static int total_SV_drop;
 static int iteration_nb;
+
+static struct stream_mapping *stream_mappings = NULL;
+static int num_streams = 0;
+static int next_stream_id = 0;
+const char* stream_id = NULL;
 
 static void print_help(const char* program_name)
 {
@@ -85,8 +92,9 @@ static int parse_args(int argc, char *argv[])
         opts.first_SV_cnt = 0;
         opts.max_SV_cnt = 0;
         opts.log_only_SV_cnt_0 = 0;
+        opts.debug = false;
 
-        while ((opt = getopt_long(argc, argv, "htld:s:n:f:c:m:", long_options,
+        while ((opt = getopt_long(argc, argv, "ghtld:s:n:f:c:m:", long_options,
                                   &long_index)) != -1) {
                 switch (opt) {
                 case 'h':
@@ -112,6 +120,9 @@ static int parse_args(int argc, char *argv[])
                         break;
                 case 'l':
                         opts.log_only_SV_cnt_0 = 1;
+                        break;
+                case 'g':
+                        opts.debug = true;
                         break;
                 case '?':
                         fprintf(stderr, "Invalid option: -%c\n", optopt);
@@ -164,9 +175,39 @@ static int is_vlan(const uint8_t *packet)
         }
 }
 
+
+static const char* get_stream_unique_id(const char *svID) {
+    // First, check if we already have this stream
+    for (int i = 0; i < num_streams; i++) {
+        if (strcmp(stream_mappings[i].svID, svID) == 0) {
+            return stream_mappings[i].unique_id_str;
+        }
+    }
+
+    // If not found, create a new mapping
+    stream_mappings = realloc(stream_mappings, (num_streams + 1) * sizeof(struct stream_mapping));
+    if (!stream_mappings) {
+        fprintf(stderr, "Memory allocation failed for stream mappings\n");
+        return NULL;
+    }
+
+    // Add the new stream
+    strncpy(stream_mappings[num_streams].svID, svID, sizeof(stream_mappings[num_streams].svID) - 1);
+    stream_mappings[num_streams].svID[sizeof(stream_mappings[num_streams].svID) - 1] = '\0';
+
+    // Format the unique ID as a string (4-digit zero-padded)
+    snprintf(stream_mappings[num_streams].unique_id_str, sizeof(stream_mappings[num_streams].unique_id_str), "%04d", next_stream_id++);
+
+    return stream_mappings[num_streams++].unique_id_str;
+}
+
+
+
+
 static void gather_records(const struct pcap_pkthdr *header,
                            const uint8_t *packet)
 {
+
         if(is_vlan(packet)) {
                 parse_SV_payload(packet
                         + sizeof(struct ethhdr) // skip Ethernet header
@@ -182,10 +223,11 @@ static void gather_records(const struct pcap_pkthdr *header,
             int gap = (sv->seqASDU[0].smpCnt - current_SV_cnt + opts.max_SV_cnt) % opts.max_SV_cnt;
             if (gap > 1) total_SV_drop += gap - 1;
         }
+        stream_id = get_stream_unique_id(sv->seqASDU[0].svID);
 
         if (opts.stream == NULL
             || (opts.stream != NULL
-                && !strcmp(sv->seqASDU[0].svID, opts.stream))) {
+                && !strcmp(stream_id, opts.stream))) {
                     if (sv->seqASDU[0].smpCnt < current_SV_cnt) iteration_nb++;
                     current_SV_cnt = sv->seqASDU[0].smpCnt;
         }
@@ -198,16 +240,26 @@ static void gather_records(const struct pcap_pkthdr *header,
                 get_ts(&timestamp);
         }
 
+
         if ((opts.log_only_SV_cnt_0 && sv->seqASDU[0].smpCnt == 0)
             || (!opts.log_only_SV_cnt_0)) {
                 if (opts.stream == NULL
-                    || (opts.stream != NULL
-                        && !strcmp(sv->seqASDU[0].svID, opts.stream))) {
-                        fprintf(SV_timestamp_file, "%d:%s:%d:%ld\n",
-                        iteration_nb,
-                        sv->seqASDU[0].svID,
-                        sv->seqASDU[0].smpCnt,
-                        (timestamp.tv_sec * 1000 * 1000) + (timestamp.tv_usec));
+                        || (opts.stream != NULL
+                                && !strcmp(stream_id, opts.stream))) {
+                                if (opts.debug) {
+                                                fprintf(SV_timestamp_file, "%d:%s:%d:%ld:%s\n",
+                                                                iteration_nb,
+                                                                stream_id,
+                                                                sv->seqASDU[0].smpCnt,
+                                                                (timestamp.tv_sec * 1000 * 1000) + (timestamp.tv_usec),
+                                                                sv->seqASDU[0].svID);
+                                } else {
+                                                fprintf(SV_timestamp_file, "%d:%s:%d:%ld\n",
+                                                                iteration_nb,
+                                                                stream_id,
+                                                                sv->seqASDU[0].smpCnt,
+                                                                (timestamp.tv_sec * 1000 * 1000) + (timestamp.tv_usec));
+                                }
                 }
         }
 }
