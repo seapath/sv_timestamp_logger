@@ -9,7 +9,7 @@
 #pragma once
 
 #include <netinet/in.h>
-
+#include <stdbool.h>
 struct sv_timestamp_logger_opts {
     char * device;
     int enable_hardware_ts;
@@ -18,4 +18,10 @@ struct sv_timestamp_logger_opts {
     int first_SV_cnt;
     int max_SV_cnt;
     char log_only_SV_cnt_0;
+    bool debug;
+};
+
+struct stream_mapping {
+    char svID[65]; // Assuming max length for IEC 61850 svID
+    char unique_id_str[5];
 };
