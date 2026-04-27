@@ -18,4 +18,5 @@ struct sv_timestamp_logger_opts {
     int first_SV_cnt;
     int max_SV_cnt;
     char log_only_SV_cnt_0;
+    char * clock_device;
 };
