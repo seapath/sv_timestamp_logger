@@ -13,6 +13,8 @@
 #include <getopt.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #include <arpa/inet.h>
 #include <netinet/if_ether.h>
@@ -30,6 +32,9 @@
         (tv)->tv_usec = (ts)->tv_nsec / 1000;                           \
 }
 
+/* Build a POSIX dynamic clock id from a /dev/ptpN file descriptor. */
+#define FD_TO_CLOCKID(fd) ((~(clockid_t)(fd) << 3) | 3)
+
 static const struct option long_options[] = {
         { "help", no_argument, 0, 'h' },
         { "device", required_argument, 0, 'd' },
@@ -40,11 +45,12 @@ static const struct option long_options[] = {
         { "max_SV_cnt", required_argument, 0, 'm' },
         { "log_only_SV_cnt_0", no_argument, 0, 'l'},
         { "debug", no_argument, 0, 'g' },
+        { "clock_device", required_argument, 0, 'p' },
         { 0, 0, 0, 0 }
 };
 
 static const char * const HELP_MSG_FMT =
-        "Usage: %s <-d|--device <device>> [s|--stream <name>] [-t|--hardware_timestamping] [-f| --filename] [--first_SV_cnt <cnt>] [--max_SV_cnt <cnt>] [-l --log_only_SV_cnt_0] [-g --debug]\n"
+        "Usage: %s <-d|--device <device>> [s|--stream <name>] [-t|--hardware_timestamping] [-f| --filename] [--first_SV_cnt <cnt>] [--max_SV_cnt <cnt>] [-l --log_only_SV_cnt_0] [-g --debug] [-p|--clock_device <path>]\n"
         "\n"
         "Get the timestamp of sample values.\n"
         "\n"
@@ -57,6 +63,7 @@ static const char * const HELP_MSG_FMT =
         "\tmax_SV_cnt: max counter of SV in the chosen IEC 61850 configuration. If not set, SV drop will not be computed.\n"
         "\tlog_only_SV_cnt_0: if set, log only the SV number 0.\n"
         "\tdebug: enable debug output.\n"
+        "\tclock_device: read the userspace timestamp from the given PHC device (e.g. /dev/ptp0) instead of CLOCK_REALTIME.\n"
 ;
 
 /*  Global Variables */
@@ -75,6 +82,8 @@ static struct stream_mapping *stream_mappings = NULL;
 static int num_streams = 0;
 static int next_stream_id = 0;
 const char* stream_id = NULL;
+static int phc_fd = -1;
+static clockid_t ts_clock = CLOCK_REALTIME;
 
 static void print_help(const char* program_name)
 {
@@ -93,8 +102,9 @@ static int parse_args(int argc, char *argv[])
         opts.max_SV_cnt = 0;
         opts.log_only_SV_cnt_0 = 0;
         opts.debug = false;
+        opts.clock_device = NULL;
 
-        while ((opt = getopt_long(argc, argv, "ghtld:s:n:f:c:m:", long_options,
+        while ((opt = getopt_long(argc, argv, "ghtld:s:n:f:c:m:p:", long_options,
                                   &long_index)) != -1) {
                 switch (opt) {
                 case 'h':
@@ -123,6 +133,8 @@ static int parse_args(int argc, char *argv[])
                         break;
                 case 'g':
                         opts.debug = true;
+                case 'p':
+                        opts.clock_device = optarg;
                         break;
                 case '?':
                         fprintf(stderr, "Invalid option: -%c\n", optopt);
@@ -157,7 +169,7 @@ static void stop_capture_loop()
 static int get_ts(struct timeval* tv) {
     int ret = 0;
     struct timespec ts;
-    if (clock_gettime(CLOCK_REALTIME, &ts) == -1) {
+    if (clock_gettime(ts_clock, &ts) == -1) {
         perror("clock_gettime");
         ret = -1;
     }
@@ -272,6 +284,15 @@ int main(int argc, char *argv[]) {
         ret = parse_args(argc, argv);
         if(ret) return ret;
 
+        if (opts.clock_device != NULL) {
+                phc_fd = open(opts.clock_device, O_RDONLY);
+                if (phc_fd < 0) {
+                        perror("open clock_device");
+                        return 1;
+                }
+                ts_clock = FD_TO_CLOCKID(phc_fd);
+        }
+
         ret = sched_setscheduler(0, SCHED_FIFO, &sp);
         if (ret == -1) {
                 perror("sched_setscheduler");
@@ -309,5 +330,8 @@ cleanup_monitor:
 
 exit:
         free_SV(sv);
+        if (phc_fd >= 0) {
+                close(phc_fd);
+        }
         return ret;
 }
