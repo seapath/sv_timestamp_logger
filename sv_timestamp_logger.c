@@ -133,6 +133,7 @@ static int parse_args(int argc, char *argv[])
                         break;
                 case 'g':
                         opts.debug = true;
+                        break;
                 case 'p':
                         opts.clock_device = optarg;
                         break;
